@@ -8,10 +8,10 @@ class AlbumXMLParser():
 	albums = []
 	current_album = {}
 
-	def __init__(self, xml_file):
-		assert(xml_file != "")
+	def __init__(self, xml_str):
+		assert(xml_str != "")
 
-		self.xml_file = xml_file
+		self.xml_str = xml_str
 
 		self.Parser = xml.parsers.expat.ParserCreate()
 
@@ -20,8 +20,7 @@ class AlbumXMLParser():
 		self.Parser.EndElementHandler = self.handleEndElement
 
 	def parse(self):
-		self.Parser.ParseFile(open(self.xml_file, "r"))
-
+		self.Parser.Parse(self.xml_str)
 	
 	def handleCharData(self, data):
 		pass

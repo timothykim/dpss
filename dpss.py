@@ -35,16 +35,15 @@ class MainWindow(wx.Frame):
 		root = self.tree.AddRoot('Connections')
 		
 		servers = []
-		for server in client.servers:
+		for server in self.client.servers:
 			albums = client.getAlbums(server)
 			s = self.tree.AppendItem(root, server + " (" + str(len(albums)) + ")")
 			for album in albums:
 				a = self.tree.AppendItem(s, album['name'] + " (" + str(album['count']) + ")")
+				#self.tree.SetPyData(a, album['photos'])
 				for photo in album['photos']:
 					p = self.tree.AppendItem(a, basename(photo['path']))
 					self.tree.SetPyData(p, photo)
-
-
 			servers.append(s)
 		
 		self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeSelection, id=ID_SEVER_TREE)
@@ -52,9 +51,13 @@ class MainWindow(wx.Frame):
 		
 		#picture viewer
 		self.picture_panel = wx.Panel(splitter, -1)
-		self.picture = wx.StaticBitmap(self.picture_panel)
+		self.picture_box = wx.GridSizer(20,3,5,5)
+		self.picture_panel.SetSizer(self.picture_box)
+
+
 		
 		splitter.SplitVertically(self.tree, self.picture_panel)
+		
 		
 		
 		#create status bar
@@ -107,10 +110,15 @@ class MainWindow(wx.Frame):
 		
 	
 	def OnTreeSelection(self, event):
+		self.picture_box.DeleteWindows()
+		self.picture_box.Clear()
 		item = event.GetItem()
-		photo = self.tree.GetPyData(item)
-		if photo:
-			self.picture.SetBitmap(wx.Bitmap(photo['thumb']))
+		photos = self.tree.GetPyData(item)
+		if photos:
+			for photo in photos:
+				pp = wx.Panel(self.picture_panel, -1)
+				wx.StaticBitmap(pp).SetBitmap(wx.Bitmap(photo['thumb']))
+				self.picture_box.Add(pp, 0, wx.EXPAND)
 	
 	def OnQuit(self, event):
 		self.Close()
