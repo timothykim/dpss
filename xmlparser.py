@@ -1,31 +1,32 @@
 #!/usr/bin/env python
-
 import xml.parsers.expat
 
 
 class AlbumXMLParser():
-
-	albums = []
-	current_album = {}
-
+	""" XML Parser class. Generates dictionary of album data from a xml file """
 	def __init__(self, xml_str):
-		assert(xml_str != "")
-
+		""" Provide the xml string """
+		
+		self.albums = []
+		self.current_album = {}
 		self.xml_str = xml_str
-
-		self.Parser = xml.parsers.expat.ParserCreate()
-
-		self.Parser.CharacterDataHandler = self.handleCharData
-		self.Parser.StartElementHandler = self.handleStartElement
-		self.Parser.EndElementHandler = self.handleEndElement
-
+	
 	def parse(self):
-		self.Parser.Parse(self.xml_str)
+		""" parse the xml string to generate the array of album dictionaries """
+		parser = xml.parsers.expat.ParserCreate()
+		
+		parser.CharacterDataHandler = self.handleCharData
+		parser.StartElementHandler = self.handleStartElement
+		parser.EndElementHandler = self.handleEndElement
+		
+		parser.Parse(self.xml_str)
 	
 	def handleCharData(self, data):
+		""" parser helper """
 		pass
-
+	
 	def handleStartElement(self, name, attrs):
+		""" parser helper """
 		if name == 'album':
 			self.current_album = {}
 			self.current_album['name'] = attrs['name']
@@ -33,9 +34,10 @@ class AlbumXMLParser():
 
 		if name == 'photo':
 			self.current_album['photos'].append({'path': attrs['path'], 'thumb': attrs['thumb']})
-
-
+		
+	
 	def handleEndElement(self, name):
+		""" parser helper """
 		if name == 'album':
 			self.current_album['count'] = len(self.current_album['photos'])
 			self.albums.append(self.current_album)

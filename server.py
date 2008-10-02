@@ -1,5 +1,9 @@
 #!/usr/bin/python
-
+"""
+	DPSP Server
+	
+	Please refer to the final report for protocol specifications
+"""
 #server.py
 
 from twisted.internet.protocol import Factory
@@ -14,12 +18,15 @@ import socket
 
 
 class PXMLServer(LineReceiver, FileSender):
+	""" Main Server Class """
 	def connectionMade(self):
+		""" Event handler for client connection. """
 		self.transport.write('Connected to ' + self.factory.name + '\r\n')
 		print 'Connection made.'
 	
 	
 	def lineReceived(self, line):
+		""" Parses the client requests and write out approperiate response """
 		if line == "getxml":
 			self.sendXML(self.factory.xml)
 		elif line.startswith("getphoto "):
@@ -37,6 +44,7 @@ class PXMLServer(LineReceiver, FileSender):
 	
 	
 	def sendXML(self, filename):
+		""" Opens the specified xml file and sends it over TCP """
 		try:
 			f = open(filename, 'r')
 			for line in f.readlines():
@@ -52,6 +60,7 @@ class PXMLServer(LineReceiver, FileSender):
 	
 	
 	def sendPicture(self, picture):
+		""" Opens the specified picture file and sends it over TCP """
 		try:
 			re = re.compile("^" + self.libpath + "/.*\.jpe?g$")
 			if not re_jpeg.match(picture.lower()):
@@ -74,6 +83,7 @@ class PXMLServer(LineReceiver, FileSender):
 
 
 class PXMLFactory(Factory):
+	""" Server Factory """
 	protocol = PXMLServer
 	
 	def __init__(self, name=None, xml=None):

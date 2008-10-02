@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+"""
+	DPSP Module
+	
+	GUI Front End
+"""
+
 import wx
 import client
 from os.path import basename
@@ -18,8 +24,13 @@ ID_PREF = 113
 
 
 class MainWindow(wx.Frame):
-	""" We simply derive a new class of Frame. """
+	""" Main Window Class. Nothing fancy here. """
 	def __init__(self, parent, id, title, client):
+		"""
+			Constructor
+			
+			Populates the left tree pane.
+		"""
 		wx.Frame.__init__(self, parent, id, title, size=(800,500))
 		
 		self.client = client
@@ -36,25 +47,30 @@ class MainWindow(wx.Frame):
 		
 		servers = []
 		for server in self.client.servers:
-			albums = client.getAlbums(server)
-			s = self.tree.AppendItem(root, server + " (" + str(len(albums)) + ")")
-			for album in albums:
-				a = self.tree.AppendItem(s, album['name'] + " (" + str(album['count']) + ")")
-				#self.tree.SetPyData(a, album['photos'])
-				for photo in album['photos']:
-					p = self.tree.AppendItem(a, basename(photo['path']))
-					self.tree.SetPyData(p, photo)
-			servers.append(s)
+			albums = self.client.getAlbums(server)
+			if albums:
+				s = self.tree.AppendItem(root, server + " (" + str(len(albums)) + ")")
+				for album in albums:
+					a = self.tree.AppendItem(s, album['name'] + " (" + str(album['count']) + ")")
+					#self.tree.SetPyData(a, album['photos'])
+					for photo in album['photos']:
+						p = self.tree.AppendItem(a, basename(photo['path']))
+						photo["server"] = server
+						self.tree.SetPyData(p, photo)
+				servers.append(s)
+			
 		
 		self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeSelection, id=ID_SEVER_TREE)
 		
 		
 		#picture viewer
+		# self.picture_panel = wx.Panel(splitter, -1)
+		# self.picture_box = wx.GridSizer(20,3,5,5)
+		# self.picture_panel.SetSizer(self.picture_box)
+		
 		self.picture_panel = wx.Panel(splitter, -1)
-		self.picture_box = wx.GridSizer(20,3,5,5)
-		self.picture_panel.SetSizer(self.picture_box)
-
-
+		self.picture = wx.StaticBitmap(self.picture_panel)
+		
 		
 		splitter.SplitVertically(self.tree, self.picture_panel)
 		
@@ -98,34 +114,40 @@ class MainWindow(wx.Frame):
 		self.Show(True)
 	
 	def OnConnect(self, event):
+		""" Connect to a user specified server and update the GUI """
+		
 		self.statusbar.SetStatusText('Connecting...')
 		dialog = wx.TextEntryDialog(self, 'Please Enter an IP to connect to:', 'Connect to IP')
 		dialog.SetValue("127.0.0.1")
-		if dialog.ShowModal == wx.ID_OK:
-			self.client.connect(dialog.GetValue())
+		#if dialog.ShowModal == wx.ID_OK:
+			#self.client.connect(dialog.GetValue())
 		dialog.Destroy()
 	
 	def OnRefresh(self, event):
+		""" Reconnect to all the servers """
 		self.statusbar.SetStatusText('Refreshing...')
 		
 	
 	def OnTreeSelection(self, event):
-		self.picture_box.DeleteWindows()
-		self.picture_box.Clear()
+		""" Event handler for tree item selections """
 		item = event.GetItem()
-		photos = self.tree.GetPyData(item)
-		if photos:
-			for photo in photos:
-				pp = wx.Panel(self.picture_panel, -1)
-				wx.StaticBitmap(pp).SetBitmap(wx.Bitmap(photo['thumb']))
-				self.picture_box.Add(pp, 0, wx.EXPAND)
+		photo = self.tree.GetPyData(item)
+		if photo:
+			p = self.client.getThumb(photo["server"], photo["thumb"])
+			self.picture.SetBitmap(wx.Bitmap(p))
+			self.Refresh()
 	
 	def OnQuit(self, event):
+		""" Event handler for quiting """
 		self.Close()
 
+def main():
+	c = client.Client()
 
-c = client.Client()
+	app = wx.App(0)
+	MainWindow(None, -1, 'DPSS', c)
+	app.MainLoop()
 
-app = wx.App(0)
-MainWindow(None, -1, 'DPSS', c)
-app.MainLoop()
+
+if __name__ == "__main__":
+	main()

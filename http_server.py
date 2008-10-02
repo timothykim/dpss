@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
+""" Simple HTTP server that servers as a gate way to DPSP """
 
 from twisted.web import server, resource, static
 from twisted.internet import reactor
@@ -8,14 +8,6 @@ from twisted.internet import reactor
 import sys
 import os
 import utilities
-
-
-class Error(resource.Resource):
-	def render_GET(self, request):
-		return "<html>Album Request</html>"
-	
-
-
 
 def main():
 	#first load the config file
